@@ -23,6 +23,9 @@ jobs:
         wget https://github.com/processing/processing4/releases/download/processing-1297-4.3.4/processing-4.3.4-linux-x64.tgz -O processing.tgz
         tar -xzf processing.tgz
         mv processing-4.3.4 /opt/processing
+        
+    - name: Debug Folder Structure
+      run: ls -R $GITHUB_WORKSPACE
 
     - name: Generate Android Project
       run: |
