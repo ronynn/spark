@@ -20,9 +20,9 @@ jobs:
 
     - name: Install Processing CLI
       run: |
-        wget https://github.com/processing/processing4/releases/download/processing-1295-4.3/processing-4.3-linux-x64.tgz -O processing.tgz
+        wget https://github.com/processing/processing4/releases/download/processing-1297-4.3.4/processing-4.3.4-linux-x64.tgz -O processing.tgz
         tar -xzf processing.tgz
-        mv processing-4.3 /opt/processing
+        mv processing-4.3.4 /opt/processing
 
     - name: Generate Android Project
       run: |
