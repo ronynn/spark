@@ -1,4 +1,4 @@
-// Spark class
+// Spark class to be used
 class Spark {
   PVector loc;
   PVector vel;
