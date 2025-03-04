@@ -29,7 +29,7 @@ jobs:
 
     - name: Generate Android Project
       run: |
-        /opt/processing/processing-java --sketch=$GITHUB_WORKSPACE --output=$GITHUB_WORKSPACE/build --force --export
+        /opt/processing/processing-java --sketch=$GITHUB_WORKSPACE/spark --output=$GITHUB_WORKSPACE/build --force --export
 
     - name: Install Android SDK
       run: |
