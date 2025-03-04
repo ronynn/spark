@@ -1,0 +1,63 @@
+name: Build Processing Android APK
+
+on:
+  push:
+    tags:
+      - "alpha"
+      - "beta"
+      - "release"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install OpenJDK
+      run: sudo apt-get update && sudo apt-get install -y openjdk-17-jdk
+
+    - name: Install Processing CLI
+      run: |
+        wget https://github.com/processing/processing4/releases/download/4.3/processing-4.3-linux-x64.tgz
+        tar -xzf processing-4.3-linux-x64.tgz
+        mv processing-4.3 /opt/processing
+
+    - name: Generate Android Project
+      run: |
+        /opt/processing/processing-java --sketch=$GITHUB_WORKSPACE --output=$GITHUB_WORKSPACE/build --force --export
+
+    - name: Install Android SDK
+      run: |
+        sudo apt-get install -y unzip
+        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O sdk-tools.zip
+        unzip sdk-tools.zip -d $HOME/android-sdk
+        export ANDROID_HOME=$HOME/android-sdk
+        export PATH=$ANDROID_HOME/cmdline-tools/bin:$PATH
+        yes | sdkmanager --licenses
+        sdkmanager "platforms;android-33" "build-tools;33.0.2"
+
+    - name: Build APK (Ant)
+      run: |
+        export ANDROID_HOME=$HOME/android-sdk
+        cd build/android
+        ant release
+
+    - name: Upload APK as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: Processing-Android-APK
+        path: build/android/bin/*.apk
+
+    - name: Create GitHub Release (Only for Release Tags)
+      if: startsWith(github.ref, 'refs/tags/release')
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: Processing APK - ${{ github.ref_name }}
+        draft: false
+        prerelease: false
+        files: build/android/bin/*.apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
