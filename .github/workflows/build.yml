@@ -24,9 +24,6 @@ jobs:
         tar -xzf processing.tgz
         sudo mv processing-4.3.4 /opt/processing
 
-    - name: Debug Folder Structure
-      run: ls -R $GITHUB_WORKSPACE
-
     - name: Install Android SDK
       run: |
         sudo apt-get install -y unzip
@@ -43,9 +40,15 @@ jobs:
 
     - name: Install Processing Android Mode
       run: |
-        mkdir -p ~/sketchbook/modes
-        wget https://github.com/processing/processing-android/releases/download/latest/androidmode.zip -O androidmode.zip
-        unzip androidmode.zip -d ~/sketchbook/modes/
+        mkdir -p $HOME/sketchbook/modes
+        wget https://github.com/processing/processing-android/releases/download/latest/AndroidMode.zip -O AndroidMode.zip
+        unzip AndroidMode.zip -d $HOME/sketchbook/modes/
+        mv $HOME/sketchbook/modes/android $HOME/sketchbook/modes/AndroidMode
+
+        echo "PROCESSING_SKETCHBOOK=$HOME/sketchbook" >> $GITHUB_ENV
+
+    - name: Debug Folder Structure
+      run: ls -R $HOME/sketchbook
 
     - name: Generate Android Project
       run: |
