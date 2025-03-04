@@ -22,36 +22,52 @@ jobs:
       run: |
         wget https://github.com/processing/processing4/releases/download/processing-1297-4.3.4/processing-4.3.4-linux-x64.tgz -O processing.tgz
         tar -xzf processing.tgz
-        mv processing-4.3.4 /opt/processing
-        
+        sudo mv processing-4.3.4 /opt/processing
+
     - name: Debug Folder Structure
       run: ls -R $GITHUB_WORKSPACE
-
-    - name: Generate Android Project
-      run: |
-        /opt/processing/processing-java --sketch=$GITHUB_WORKSPACE/spark --output=$GITHUB_WORKSPACE/build --force --export
 
     - name: Install Android SDK
       run: |
         sudo apt-get install -y unzip
-        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O sdk-tools.zip
-        unzip sdk-tools.zip -d $HOME/android-sdk
-        export ANDROID_HOME=$HOME/android-sdk
-        export PATH=$ANDROID_HOME/cmdline-tools/bin:$PATH
-        yes | sdkmanager --licenses
-        sdkmanager "platforms;android-33" "build-tools;33.0.2"
+        wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O sdk-tools.zip
+        mkdir -p $HOME/android-sdk/cmdline-tools
+        unzip sdk-tools.zip -d $HOME/android-sdk/cmdline-tools
+        mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
+
+        echo "export ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+        echo "export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH" >> $GITHUB_ENV
+
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "build-tools;34.0.0" "platforms;android-34"
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+
+    - name: Install Processing Android Mode
+      run: |
+        mkdir -p ~/sketchbook/modes
+        wget https://github.com/processing/processing-android/releases/download/latest/processing-android.zip -O androidmode.zip
+        unzip androidmode.zip -d ~/sketchbook/modes/
+
+    - name: Generate Android Project
+      run: |
+        /opt/processing/processing-java --sketch=$GITHUB_WORKSPACE/spark --output=$GITHUB_WORKSPACE/build --force --export --variant android
 
     - name: Build APK (Ant)
       run: |
-        export ANDROID_HOME=$HOME/android-sdk
         cd build/android
+        ant debug
         ant release
 
-    - name: Upload APK as Artifact
+    - name: Upload Debug APK as Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Processing-Android-APK
-        path: build/android/bin/*.apk
+        name: Processing-Android-APK-Debug
+        path: build/android/bin/app-debug.apk
+
+    - name: Upload Unsigned APK as Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Processing-Android-APK-Unsigned
+        path: build/android/bin/app-release-unsigned.apk
 
     - name: Create GitHub Release (Only for Release Tags)
       if: startsWith(github.ref, 'refs/tags/release')
@@ -61,6 +77,8 @@ jobs:
         name: Processing APK - ${{ github.ref_name }}
         draft: false
         prerelease: false
-        files: build/android/bin/*.apk
+        files: 
+          - build/android/bin/app-debug.apk
+          - build/android/bin/app-release-unsigned.apk
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
