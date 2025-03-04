@@ -44,7 +44,7 @@ jobs:
     - name: Install Processing Android Mode
       run: |
         mkdir -p ~/sketchbook/modes
-        wget https://github.com/processing/processing-android/releases/download/latest/processing-android.zip -O androidmode.zip
+        wget https://github.com/processing/processing-android/releases/download/latest/androidmode.zip -O androidmode.zip
         unzip androidmode.zip -d ~/sketchbook/modes/
 
     - name: Generate Android Project
