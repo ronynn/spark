@@ -1,5 +1,5 @@
-/**
- * Sparks
+/** 
+ * Sparks demo
  * by CalsignLabs
  * 
  * Tap to create a new Spark.
