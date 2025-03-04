@@ -25,7 +25,7 @@ jobs:
           tar -xzf processing.tgz
           sudo mv processing-4.3.4 /opt/processing
 
-      - name: Debug Folder Structure
+      - name: Debug Repository Structure
         run: ls -R $GITHUB_WORKSPACE
 
       - name: Install Android SDK
@@ -40,22 +40,33 @@ jobs:
           yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "build-tools;34.0.0" "platforms;android-34"
           yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
 
-      - name: Install Processing Android Mode
+      - name: Install Processing Android Mode and Setup Sketchbook
         run: |
+          # Create a custom sketchbook folder with both modes and libraries directories.
           mkdir -p $HOME/sketchbook/modes
+          mkdir -p $HOME/sketchbook/libraries
           wget https://github.com/processing/processing-android/releases/download/latest/AndroidMode.zip -O AndroidMode.zip
           unzip AndroidMode.zip -d $HOME/sketchbook/modes/
-          echo "Contents of modes/:"
-          ls -R $HOME/sketchbook/modes/
+          # If the Android Mode package contains libraries (commonly in modes/AndroidMode/libraries),
+          # copy them into the sketchbook libraries folder so Processing can find them.
+          if [ -d "$HOME/sketchbook/modes/AndroidMode/libraries" ]; then
+            cp -r $HOME/sketchbook/modes/AndroidMode/libraries/* $HOME/sketchbook/libraries/
+          fi
           echo "PROCESSING_SKETCHBOOK=$HOME/sketchbook" >> $GITHUB_ENV
+          echo "Sketchbook structure:" 
+          ls -R $HOME/sketchbook
 
       - name: Generate Android Project
         run: |
-          /opt/processing/processing-java --sketch=$GITHUB_WORKSPACE/spark --output=$GITHUB_WORKSPACE/build --force --export --variant android
+          /opt/processing/processing-java \
+            --sketch=$GITHUB_WORKSPACE/spark \
+            --output=$GITHUB_WORKSPACE/build \
+            --force --export --variant android \
+            --sketchbook=$HOME/sketchbook
 
       - name: Build APK (Ant)
         run: |
-          cd build/android
+          cd $GITHUB_WORKSPACE/build/android
           ant debug
           ant release
 
